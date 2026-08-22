@@ -437,32 +437,17 @@ function renderDashboard() {
   const totalDistance = sessions.reduce((sum, s) => sum + (s.distanceKm || 0), 0);
 
   summaryCard.innerHTML = `
-    <div class="card stat-hero-card">
-      <div class="stat-hero-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="1"/><rect x="13" y="8" width="3" height="10" rx="1"/></svg>
-      </div>
-      <div class="stat-hero-text">
-        <div class="stat-hero-value">${sessions.length.toLocaleString("fr-FR")}</div>
-        <div class="stat-hero-label">Séance${sessions.length > 1 ? "s" : ""}</div>
-      </div>
+    <div class="summary-row">
+      <span class="summary-label">Séance${sessions.length > 1 ? "s" : ""}</span>
+      <span class="summary-value">${sessions.length.toLocaleString("fr-FR")}</span>
     </div>
-    <div class="card stat-hero-card">
-      <div class="stat-hero-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      </div>
-      <div class="stat-hero-text">
-        <div class="stat-hero-value">${sessions.length ? formatDuration(totalMinutes) : "—"}</div>
-        <div class="stat-hero-label">Temps</div>
-      </div>
+    <div class="summary-row">
+      <span class="summary-label">Temps total</span>
+      <span class="summary-value">${sessions.length ? formatDuration(totalMinutes) : "—"}</span>
     </div>
-    <div class="card stat-hero-card">
-      <div class="stat-hero-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19l6-6 4 4 6-8"/><path d="M14 9h6v6"/></svg>
-      </div>
-      <div class="stat-hero-text">
-        <div class="stat-hero-value">${totalDistance > 0 ? formatDistance(totalDistance) : "—"}</div>
-        <div class="stat-hero-label">Distance</div>
-      </div>
+    <div class="summary-row">
+      <span class="summary-label">Distance totale</span>
+      <span class="summary-value">${totalDistance > 0 ? formatDistance(totalDistance) : "—"}</span>
     </div>
   `;
 
