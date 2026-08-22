@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Aurora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="aurora-glow" aria-hidden="true"></div>
+
+  <header class="app-header">
+    <div class="brand">
+      <svg class="brand-mark" width="34" height="34" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="10" fill="url(#brand-gradient)"/>
+        <path d="M4 23c3.2-5 6.4 5 9.6 0s6.4-5 9.6 0s6.4 5 8.8 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+        <path d="M4 17c3.2-6 6.4 6 9.6 0s6.4-6 9.6 0s6.4 6 8.8 1" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <defs>
+          <linearGradient id="brand-gradient" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#34d399"/>
+            <stop offset="0.5" stop-color="#06b6d4"/>
+            <stop offset="1" stop-color="#3b82f6"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1>Aurora</h1>
+    </div>
+  </header>
+
+  <main>
+    <section id="dashboard" class="tab-panel active">
+      <h2 class="section-title">
+        <span class="section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="1"/><rect x="13" y="8" width="3" height="10" rx="1"/></svg>
+        </span>
+        Bilan
+      </h2>
+
+      <div class="period-tabs" id="dashboard-period-tabs">
+        <button type="button" class="period-btn" data-period="all">Global</button>
+        <button type="button" class="period-btn active" data-period="week">Semaine</button>
+        <button type="button" class="period-btn" data-period="month">Mois</button>
+        <button type="button" class="period-btn" data-period="year">Année</button>
+      </div>
+
+      <div class="period-nav" id="dashboard-period-nav">
+        <button type="button" class="date-nav" data-dashboard-nav="prev" aria-label="Période précédente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <span class="period-nav-label" id="dashboard-period-label">Cette semaine</span>
+        <button type="button" class="date-nav" data-dashboard-nav="next" aria-label="Période suivante">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div class="card summary-card" id="summary-card"></div>
+
+      <div id="discipline-stats"></div>
+    </section>
+
+    <section id="new-session" class="tab-panel">
+     <div id="session-form-wrapper">
+      <h2 class="section-title">
+        <span class="section-icon" id="session-form-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        </span>
+        <span id="session-form-title-text">Nouvelle séance</span>
+      </h2>
+      <form id="session-form" class="card">
+        <div class="field">
+          <label>Discipline</label>
+          <div id="discipline-picker" class="discipline-grid"></div>
+        </div>
+
+        <div class="field date-field">
+          <label for="date-trigger">Date</label>
+          <button type="button" id="date-trigger" class="date-trigger">
+            <span id="date-trigger-label">Aujourd'hui</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="4"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+          </button>
+          <input type="hidden" id="session-date" required>
+
+          <div id="date-popover" class="date-popover" hidden>
+            <div class="date-popover-header">
+              <button type="button" id="date-prev" class="date-nav" aria-label="Mois précédent">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
+              <span id="date-popover-title"></span>
+              <button type="button" id="date-next" class="date-nav" aria-label="Mois suivant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+            <div class="date-popover-weekdays">
+              <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+            </div>
+            <div id="date-popover-grid" class="date-popover-grid"></div>
+            <button type="button" id="date-today" class="date-today-btn">Aujourd'hui</button>
+          </div>
+        </div>
+
+        <div class="field date-field">
+          <label for="duration-trigger">Durée</label>
+          <button type="button" id="duration-trigger" class="date-trigger">
+            <span id="duration-trigger-label">0h00</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </button>
+          <input type="hidden" id="session-duration" required>
+
+          <div id="duration-popover" class="date-popover wheel-popover" hidden>
+            <div class="wheel-row">
+              <div class="wheel-band" aria-hidden="true"></div>
+              <div class="wheel-col"><div class="wheel-scroll" id="wheel-hours"></div></div>
+              <span class="wheel-sep">h</span>
+              <div class="wheel-col"><div class="wheel-scroll" id="wheel-minutes"></div></div>
+              <span class="wheel-sep">min</span>
+            </div>
+            <button type="button" id="duration-done" class="date-today-btn">OK</button>
+          </div>
+        </div>
+
+        <div class="field date-field" id="distance-field" hidden>
+          <label for="distance-trigger">Distance (optionnel)</label>
+          <button type="button" id="distance-trigger" class="date-trigger">
+            <span id="distance-trigger-label">Ajouter une distance</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19l6-6 4 4 6-8"/><path d="M14 9h6v6"/></svg>
+          </button>
+          <input type="hidden" id="session-distance">
+
+          <div id="distance-popover" class="date-popover wheel-popover" hidden>
+            <div class="wheel-row">
+              <div class="wheel-band" aria-hidden="true"></div>
+              <div class="wheel-col"><div class="wheel-scroll" id="wheel-km"></div></div>
+              <span class="wheel-sep">,</span>
+              <div class="wheel-col"><div class="wheel-scroll" id="wheel-km-decimal"></div></div>
+              <span class="wheel-sep">km</span>
+            </div>
+            <div class="wheel-actions">
+              <button type="button" id="distance-clear" class="date-today-btn muted">Effacer</button>
+              <button type="button" id="distance-done" class="date-today-btn">OK</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="session-notes">Note (optionnel)</label>
+          <textarea id="session-notes" rows="2" placeholder="Ressenti, parcours, météo..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" id="session-submit-btn">Enregistrer la séance</button>
+      </form>
+     </div>
+    </section>
+
+    <section id="history" class="tab-panel">
+      <h2 class="section-title">
+        <span class="section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </span>
+        Historique
+      </h2>
+
+      <div class="period-tabs" id="history-period-tabs">
+        <button type="button" class="period-btn active" data-period="all">Tout</button>
+        <button type="button" class="period-btn" data-period="week">Semaine</button>
+        <button type="button" class="period-btn" data-period="month">Mois</button>
+        <button type="button" class="period-btn" data-period="year">Année</button>
+      </div>
+
+      <div class="period-nav" id="history-period-nav" hidden>
+        <button type="button" class="date-nav" data-history-nav="prev" aria-label="Période précédente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <span class="period-nav-label" id="history-period-label">Cette semaine</span>
+        <button type="button" class="date-nav" data-history-nav="next" aria-label="Période suivante">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div class="discipline-chip-row" id="history-discipline-filter">
+        <button type="button" class="discipline-chip active" data-discipline="all">Toutes</button>
+      </div>
+
+      <div id="history-list"></div>
+    </section>
+  </main>
+
+  <div id="edit-modal-overlay" class="modal-overlay" hidden>
+    <div class="modal-sheet">
+      <button type="button" id="modal-close-btn" class="modal-close-btn" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="modal-handle"></div>
+      <div id="modal-form-slot"></div>
+    </div>
+  </div>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-tab="dashboard">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="1"/><rect x="13" y="8" width="3" height="10" rx="1"/><rect x="19" y="5" width="0" height="13"/></svg>
+      <span>Bilan</span>
+    </button>
+    <button class="tab-btn" data-tab="new-session">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      <span>Séance</span>
+    </button>
+    <button class="tab-btn" data-tab="history">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <span>Historique</span>
+    </button>
+  </nav>
+
+  <script src="js/storage.js"></script>
+  <script src="js/disciplines.js"></script>
+  <script src="js/datepicker.js"></script>
+  <script src="js/wheelpicker.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
