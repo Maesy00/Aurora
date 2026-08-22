@@ -454,13 +454,15 @@ function renderDashboard() {
 
   disciplineStats.innerHTML = "";
 
-  DISCIPLINES.filter((discipline) =>
-    sessions.some((s) => s.discipline === discipline.id)
-  ).forEach((discipline) => {
+  DISCIPLINES.map((discipline) => {
     const disciplineSessions = sessions.filter((s) => s.discipline === discipline.id);
     const minutes = disciplineSessions.reduce((sum, s) => sum + s.durationMinutes, 0);
     const distance = disciplineSessions.reduce((sum, s) => sum + (s.distanceKm || 0), 0);
-
+    return { discipline, disciplineSessions, minutes, distance };
+  })
+    .filter((entry) => entry.disciplineSessions.length > 0)
+    .sort((a, b) => b.minutes - a.minutes)
+    .forEach(({ discipline, disciplineSessions, minutes, distance }) => {
     const minutesPct = totalMinutes > 0 ? Math.round((minutes / totalMinutes) * 100) : null;
 
     const item = document.createElement("div");
