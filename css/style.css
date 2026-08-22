@@ -860,6 +860,10 @@ h2 {
   padding: 24px;
 }
 
+#auth-gate[hidden] {
+  display: none;
+}
+
 .auth-card {
   width: 100%;
   max-width: 360px;
