@@ -442,11 +442,11 @@ function renderDashboard() {
       <span class="summary-value">${sessions.length.toLocaleString("fr-FR")}</span>
     </div>
     <div class="summary-row">
-      <span class="summary-label">Temps total</span>
+      <span class="summary-label">Temps</span>
       <span class="summary-value">${sessions.length ? formatDuration(totalMinutes) : "—"}</span>
     </div>
     <div class="summary-row">
-      <span class="summary-label">Distance totale</span>
+      <span class="summary-label">Distance</span>
       <span class="summary-value">${totalDistance > 0 ? formatDistance(totalDistance) : "—"}</span>
     </div>
   `;
