@@ -624,7 +624,7 @@ h2 {
 .summary-value {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   text-align: right;
   background: var(--gradient-aurora);
   -webkit-background-clip: text;
