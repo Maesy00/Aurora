@@ -596,27 +596,37 @@ h2 {
 }
 
 .summary-card {
-  display: flex;
-  justify-content: space-around;
-  text-align: center;
-  padding: 20px 8px;
+  padding: 6px 18px;
 }
 
-.summary-stat .value {
+.summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.summary-value {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
+  text-align: right;
   background: var(--gradient-aurora);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-}
-
-.summary-stat .label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  margin-top: 2px;
 }
 
 .discipline-stat-item {

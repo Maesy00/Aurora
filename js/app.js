@@ -206,9 +206,10 @@ function formatDisplayDate(iso) {
 function formatDuration(minutes) {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
+  const hoursLabel = hours.toLocaleString("fr-FR");
   if (hours === 0) return `${mins} min`;
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h${String(mins).padStart(2, "0")}`;
+  if (mins === 0) return `${hoursLabel}h`;
+  return `${hoursLabel}h${String(mins).padStart(2, "0")}`;
 }
 
 function renderHistoryDisciplineChips() {
@@ -390,7 +391,11 @@ function formatPeriodLabel(period, range) {
 }
 
 function formatDistance(km) {
-  return `${km.toFixed(2).replace(".", ",")} km`;
+  const formatted = km.toLocaleString("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${formatted} km`;
 }
 
 periodButtons.forEach((btn) => {
@@ -432,17 +437,17 @@ function renderDashboard() {
   const totalDistance = sessions.reduce((sum, s) => sum + (s.distanceKm || 0), 0);
 
   summaryCard.innerHTML = `
-    <div class="summary-stat">
-      <div class="value">${sessions.length}</div>
-      <div class="label">Séance${sessions.length > 1 ? "s" : ""}</div>
+    <div class="summary-row">
+      <span class="summary-label">Séance${sessions.length > 1 ? "s" : ""}</span>
+      <span class="summary-value">${sessions.length.toLocaleString("fr-FR")}</span>
     </div>
-    <div class="summary-stat">
-      <div class="value">${sessions.length ? formatDuration(totalMinutes) : "—"}</div>
-      <div class="label">Temps total</div>
+    <div class="summary-row">
+      <span class="summary-label">Temps total</span>
+      <span class="summary-value">${sessions.length ? formatDuration(totalMinutes) : "—"}</span>
     </div>
-    <div class="summary-stat">
-      <div class="value">${totalDistance > 0 ? formatDistance(totalDistance) : "—"}</div>
-      <div class="label">Distance totale</div>
+    <div class="summary-row">
+      <span class="summary-label">Distance totale</span>
+      <span class="summary-value">${totalDistance > 0 ? formatDistance(totalDistance) : "—"}</span>
     </div>
   `;
 
