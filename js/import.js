@@ -288,8 +288,11 @@ function renderImportPreview() {
   });
 }
 
-importConfirmBtn.addEventListener("click", () => {
-  importParsedSessions.forEach((session) => Storage.addSession(session));
+importConfirmBtn.addEventListener("click", async () => {
+  importConfirmBtn.disabled = true;
+  importConfirmBtn.textContent = "Import en cours…";
+  await Storage.addSessions(importParsedSessions);
+  importConfirmBtn.disabled = false;
   closeImportModal();
   renderHistory();
   renderDashboard();

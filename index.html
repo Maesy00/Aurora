@@ -12,6 +12,45 @@
 <body>
   <div class="aurora-glow" aria-hidden="true"></div>
 
+  <div id="auth-gate">
+    <div class="auth-card">
+      <svg class="brand-mark" width="44" height="44" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="10" fill="url(#brand-gradient-auth)"/>
+        <path d="M4 23c3.2-5 6.4 5 9.6 0s6.4-5 9.6 0s6.4 5 8.8 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+        <path d="M4 17c3.2-6 6.4 6 9.6 0s6.4-6 9.6 0s6.4 6 8.8 1" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <defs>
+          <linearGradient id="brand-gradient-auth" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#34d399"/>
+            <stop offset="0.5" stop-color="#06b6d4"/>
+            <stop offset="1" stop-color="#3b82f6"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1 id="auth-title">Connexion</h1>
+      <p class="auth-subtitle">Tes séances, synchronisées sur tous tes appareils.</p>
+
+      <form id="auth-form">
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="auth-password">Mot de passe</label>
+          <input type="password" id="auth-password" required autocomplete="current-password" minlength="6">
+        </div>
+        <p id="auth-error" class="auth-error" hidden></p>
+        <p id="auth-info" class="auth-info" hidden></p>
+        <button type="submit" class="btn-primary" id="auth-submit-btn">Se connecter</button>
+      </form>
+
+      <p class="auth-switch">
+        <span id="auth-switch-text">Pas encore de compte ?</span>
+        <button type="button" id="auth-toggle-mode">Créer un compte</button>
+      </p>
+    </div>
+  </div>
+
+  <div id="app-shell" hidden>
   <header class="app-header">
     <div class="brand">
       <svg class="brand-mark" width="34" height="34" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -28,6 +67,9 @@
       </svg>
       <h1>Aurora</h1>
     </div>
+    <button type="button" id="sign-out-btn" class="sign-out-btn" aria-label="Se déconnecter">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+    </button>
   </header>
 
   <main>
@@ -256,12 +298,16 @@
       <span>Historique</span>
     </button>
   </nav>
+  </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/disciplines.js"></script>
   <script src="js/datepicker.js"></script>
   <script src="js/wheelpicker.js"></script>
   <script src="js/app.js"></script>
   <script src="js/import.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>

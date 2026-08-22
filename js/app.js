@@ -146,7 +146,7 @@ function editSession(session) {
   openEditModal();
 }
 
-sessionForm.addEventListener("submit", (event) => {
+sessionForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (!selectedDiscipline) {
@@ -173,10 +173,11 @@ sessionForm.addEventListener("submit", (event) => {
 
   const wasEditing = Boolean(editingSessionId);
   if (wasEditing) {
-    Storage.updateSession(editingSessionId, sessionData);
+    await Storage.updateSession(editingSessionId, sessionData);
     renderHistory();
+    renderDashboard();
   } else {
-    Storage.addSession(sessionData);
+    await Storage.addSession(sessionData);
   }
 
   resetFormFields();
@@ -326,10 +327,11 @@ function renderHistory() {
     `;
 
     item.querySelector('[data-action="edit"]').addEventListener("click", () => editSession(session));
-    item.querySelector('[data-action="delete"]').addEventListener("click", () => {
+    item.querySelector('[data-action="delete"]').addEventListener("click", async () => {
       if (confirm("Supprimer cette séance ?")) {
-        Storage.deleteSession(session.id);
+        await Storage.deleteSession(session.id);
         renderHistory();
+        renderDashboard();
       }
     });
 
