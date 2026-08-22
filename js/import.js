@@ -8,7 +8,13 @@ const IMPORT_TYPE_MAP = [
   { match: ["run", "course"], discipline: "running" },
   { match: ["ride", "bike", "cycling", "vélo", "velo", "vtt"], discipline: "cycling" },
   { match: ["swim", "nage", "natation"], discipline: "swimming" },
-  { match: ["weight", "strength", "muscu", "hiit", "crossfit", "training"], discipline: "strength" },
+  {
+    match: [
+      "weight", "strength", "muscu", "hiit", "crossfit",
+      "poids", "renforcement", "entraînement", "entrainement", "workout",
+    ],
+    discipline: "strength",
+  },
   { match: ["yoga", "pilates"], discipline: "yoga" },
 ];
 
@@ -19,6 +25,50 @@ function mapActivityType(raw) {
     if (entry.match.some((m) => lower.includes(m))) return entry.discipline;
   }
   return null;
+}
+
+const FRENCH_MONTHS = {
+  janv: 0, janvier: 0,
+  févr: 1, fevr: 1, février: 1, fevrier: 1,
+  mars: 2,
+  avr: 3, avril: 3,
+  mai: 4,
+  juin: 5,
+  juil: 6, juillet: 6,
+  août: 7, aout: 7,
+  sept: 8, septembre: 8,
+  oct: 9, octobre: 9,
+  nov: 10, novembre: 10,
+  déc: 11, dec: 11, décembre: 11, decembre: 11,
+};
+
+function parseImportDate(raw) {
+  if (!raw) return null;
+  const str = String(raw).trim();
+
+  const native = new Date(str);
+  if (!isNaN(native.getTime())) return native;
+
+  const match = str.match(/^(\d{1,2})\s+([a-zéèêàôûîç]+)\.?\s+(\d{4})(?:,?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/i);
+  if (match) {
+    const [, day, monthRaw, year, hour, minute, second] = match;
+    const month = FRENCH_MONTHS[monthRaw.toLowerCase()];
+    if (month !== undefined) {
+      return new Date(
+        Number(year), month, Number(day),
+        hour ? Number(hour) : 0, minute ? Number(minute) : 0, second ? Number(second) : 0
+      );
+    }
+  }
+
+  return null;
+}
+
+function parseDistanceValue(raw) {
+  if (!raw) return null;
+  const cleaned = String(raw).replace(/[\s  ]/g, "").replace(",", ".");
+  const num = Number(cleaned);
+  return isNaN(num) ? null : num;
 }
 
 function parseCSV(text) {
@@ -65,12 +115,24 @@ function parseCSV(text) {
 function findColumn(headers, candidates) {
   const lower = headers.map((h) => h.trim().toLowerCase());
   for (const candidate of candidates) {
-    const idx = lower.findIndex((h) => h === candidate);
+    const idx = lower.findIndex((h) => h === candidate || h.includes(candidate));
     if (idx !== -1) return idx;
   }
+  return -1;
+}
+
+/*
+ * L'export Strava contient deux colonnes "Distance" : une résumée dans
+ * l'unité d'affichage du compte (parfois km, parfois m selon le sport),
+ * et une seconde, toujours en mètres bruts. On cible cette dernière en
+ * cherchant la dernière colonne correspondante plutôt que la première.
+ */
+function findLastColumn(headers, candidates) {
+  const lower = headers.map((h) => h.trim().toLowerCase());
   for (const candidate of candidates) {
-    const idx = lower.findIndex((h) => h.includes(candidate));
-    if (idx !== -1) return idx;
+    for (let i = lower.length - 1; i >= 0; i--) {
+      if (lower[i] === candidate) return i;
+    }
   }
   return -1;
 }
@@ -100,10 +162,14 @@ function parseImportedCSV(text, distanceAlreadyKm) {
   if (rows.length < 2) return [];
 
   const headers = rows[0];
-  const dateCol = findColumn(headers, ["activity date", "date"]);
-  const typeCol = findColumn(headers, ["activity type", "type"]);
-  const durationCol = findColumn(headers, ["moving time", "elapsed time", "time", "duration"]);
-  const distanceCol = findColumn(headers, ["distance"]);
+  const dateCol = findColumn(headers, ["activity date", "date de l'activité", "date"]);
+  const typeCol = findColumn(headers, ["activity type", "type d'activité", "type"]);
+  const durationCol = findColumn(headers, [
+    "moving time", "durée de déplacement", "duree de deplacement",
+    "elapsed time", "temps écoulé", "temps ecoule",
+    "time", "duration", "durée",
+  ]);
+  const distanceCol = findLastColumn(headers, ["distance"]);
 
   if (dateCol === -1 || typeCol === -1 || durationCol === -1) return [];
 
@@ -115,16 +181,16 @@ function parseImportedCSV(text, distanceAlreadyKm) {
     const discipline = mapActivityType(row[typeCol]);
     if (!discipline) continue;
 
-    const date = new Date(row[dateCol]);
-    if (isNaN(date.getTime())) continue;
+    const date = parseImportDate(row[dateCol]);
+    if (!date) continue;
 
     const durationMinutes = parseDurationToMin(row[durationCol]);
     if (!durationMinutes) continue;
 
     let distanceKm = null;
     if (distanceCol !== -1 && row[distanceCol]) {
-      const rawDistance = Number(row[distanceCol]);
-      if (!isNaN(rawDistance) && rawDistance > 0) {
+      const rawDistance = parseDistanceValue(row[distanceCol]);
+      if (rawDistance !== null && rawDistance > 0) {
         distanceKm = Math.round((distanceAlreadyKm ? rawDistance : rawDistance / 1000) * 100) / 100;
       }
     }
