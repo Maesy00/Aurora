@@ -302,7 +302,7 @@ function renderHistory() {
     item.style.setProperty("--discipline-color", discipline.color);
 
     const metaParts = [formatDuration(session.durationMinutes)];
-    if (session.distanceKm) metaParts.push(`${session.distanceKm} km`);
+    if (session.distanceKm) metaParts.push(formatDistance(session.distanceKm));
 
     item.innerHTML = `
       <div class="session-icon-badge">
@@ -390,8 +390,7 @@ function formatPeriodLabel(period, range) {
 }
 
 function formatDistance(km) {
-  const rounded = Math.round(km * 10) / 10;
-  return `${rounded} km`.replace(".", ",");
+  return `${km.toFixed(2).replace(".", ",")} km`;
 }
 
 periodButtons.forEach((btn) => {

@@ -271,7 +271,7 @@ function renderImportPreview() {
   importParsedSessions.forEach((session) => {
     const discipline = DISCIPLINES.find((d) => d.id === session.discipline);
     const metaParts = [formatDuration(session.durationMinutes)];
-    if (session.distanceKm) metaParts.push(`${session.distanceKm} km`);
+    if (session.distanceKm) metaParts.push(formatDistance(session.distanceKm));
 
     const row = document.createElement("div");
     row.className = "import-preview-row";
