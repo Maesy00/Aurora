@@ -23,7 +23,7 @@ const DEFAULT_EXERCISES = [
   { id: "squat", name: "Squat", group: "legs", metric: "weight_reps" },
   { id: "squat-avant", name: "Squat avant", group: "legs", metric: "weight_reps" },
   { id: "squat-gobelet", name: "Squat gobelet", group: "legs", metric: "weight_reps" },
-  { id: "squat-bulgare", name: "Squat bulgare", group: "legs", metric: "weight_reps" },
+  { id: "squat-bulgare", name: "Fentes bulgares", group: "legs", metric: "weight_reps" },
   { id: "souleve-terre", name: "Soulevé de terre", group: "legs", metric: "weight_reps" },
   { id: "souleve-terre-roumain", name: "Soulevé de terre roumain", group: "legs", metric: "weight_reps" },
   { id: "good-morning", name: "Good morning", group: "legs", metric: "weight_reps" },
