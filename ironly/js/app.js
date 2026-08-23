@@ -21,13 +21,6 @@ function todayISO() {
   return new Date(d - tz).toISOString().slice(0, 10);
 }
 
-function isoDaysAgo(days) {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  const tz = d.getTimezoneOffset() * 60000;
-  return new Date(d - tz).toISOString().slice(0, 10);
-}
-
 function formatDateLong(iso) {
   const d = new Date(`${iso}T00:00:00`);
   return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
@@ -387,7 +380,6 @@ function wireSessionView() {
   });
   document.getElementById("btn-cancel-session").addEventListener("click", cancelSession);
   document.getElementById("btn-finish-session").addEventListener("click", finishSession);
-  document.getElementById("btn-load-test-data").addEventListener("click", seedTestData);
   document.getElementById("btn-open-plans-manager").addEventListener("click", openPlansManager);
 
   document.getElementById("session-date").addEventListener("input", (e) => {
@@ -770,133 +762,6 @@ function wireStatsView() {
   document.getElementById("stats-exercise-select").addEventListener("change", (e) => {
     renderExerciseStats(e.target.value);
   });
-}
-
-// ---------------------------------------------------------------------
-// Données de test (bouton de démo, pour tester l'app avec du contenu réaliste)
-// ---------------------------------------------------------------------
-
-function seedTestData() {
-  const testPlans = [
-    {
-      name: "Force jambes S1",
-      exercises: [
-        { exerciseId: "squat", targetSets: 3, targetReps: "8-10" },
-        { exerciseId: "souleve-terre-roumain", targetSets: 3, targetReps: "10-12" },
-        { exerciseId: "mollets-debout", targetSets: 3, targetReps: "15" },
-      ],
-    },
-    {
-      name: "Gainage express",
-      exercises: [
-        { exerciseId: "planche", targetSets: 3, targetReps: "45s" },
-        { exerciseId: "gainage-lateral", targetSets: 3, targetReps: "30s/côté" },
-        { exerciseId: "rotation-russe", targetSets: 3, targetReps: "20" },
-      ],
-    },
-    {
-      name: "Haut du corps",
-      exercises: [
-        { exerciseId: "tirage-horizontal", targetSets: 3, targetReps: "10-12" },
-        { exerciseId: "developpe-epaules", targetSets: 3, targetReps: "10" },
-        { exerciseId: "pompes", targetSets: 3, targetReps: "15" },
-        { exerciseId: "face-pull", targetSets: 3, targetReps: "15" },
-      ],
-    },
-    {
-      name: "Stabilité natation",
-      exercises: [
-        { exerciseId: "rotation-externe-epaule", targetSets: 3, targetReps: "15" },
-        { exerciseId: "ytw-raise", targetSets: 3, targetReps: "12" },
-        { exerciseId: "pallof-press", targetSets: 3, targetReps: "12/côté" },
-      ],
-    },
-  ];
-
-  const savedPlans = testPlans.map((p) => Storage.addPlan(p));
-  const byName = Object.fromEntries(savedPlans.map((p) => [p.name, p]));
-
-  const testSessions = [
-    {
-      days: 0,
-      plan: "Force jambes S1",
-      exercises: [
-        { id: "squat", sets: [{ reps: 8, weight: 62.5 }, { reps: 8, weight: 62.5 }, { reps: 7, weight: 62.5 }] },
-        { id: "souleve-terre-roumain", sets: [{ reps: 10, weight: 70 }, { reps: 10, weight: 70 }, { reps: 10, weight: 70 }] },
-        { id: "mollets-debout", sets: [{ reps: 15, weight: 40 }, { reps: 15, weight: 40 }, { reps: 15, weight: 40 }] },
-      ],
-    },
-    {
-      days: 3,
-      plan: "Gainage express",
-      exercises: [
-        { id: "planche", sets: [{ duration: 45 }, { duration: 45 }, { duration: 40 }] },
-        { id: "gainage-lateral", sets: [{ duration: 30 }, { duration: 30 }, { duration: 30 }] },
-        { id: "rotation-russe", sets: [{ reps: 20, weight: 8 }, { reps: 20, weight: 8 }, { reps: 18, weight: 8 }] },
-      ],
-    },
-    {
-      days: 5,
-      plan: "Haut du corps",
-      exercises: [
-        { id: "tirage-horizontal", sets: [{ reps: 10, weight: 45 }, { reps: 10, weight: 45 }, { reps: 9, weight: 45 }] },
-        { id: "developpe-epaules", sets: [{ reps: 10, weight: 20 }, { reps: 10, weight: 20 }, { reps: 8, weight: 20 }] },
-        { id: "pompes", sets: [{ reps: 15 }, { reps: 15 }, { reps: 12 }] },
-      ],
-    },
-    {
-      days: 8,
-      plan: "Force jambes S1",
-      exercises: [
-        { id: "squat", sets: [{ reps: 8, weight: 60 }, { reps: 8, weight: 60 }, { reps: 8, weight: 60 }] },
-        { id: "souleve-terre-roumain", sets: [{ reps: 10, weight: 67.5 }, { reps: 10, weight: 67.5 }, { reps: 10, weight: 67.5 }] },
-        { id: "mollets-debout", sets: [{ reps: 15, weight: 37.5 }, { reps: 15, weight: 37.5 }, { reps: 15, weight: 37.5 }] },
-      ],
-    },
-    {
-      days: 12,
-      plan: "Stabilité natation",
-      exercises: [
-        { id: "rotation-externe-epaule", sets: [{ reps: 15 }, { reps: 15 }, { reps: 15 }] },
-        { id: "ytw-raise", sets: [{ reps: 12, weight: 3 }, { reps: 12, weight: 3 }, { reps: 12, weight: 3 }] },
-        { id: "pallof-press", sets: [{ reps: 12, weight: 15 }, { reps: 12, weight: 15 }, { reps: 12, weight: 15 }] },
-      ],
-    },
-    {
-      days: 15,
-      plan: "Force jambes S1",
-      exercises: [
-        { id: "squat", sets: [{ reps: 8, weight: 57.5 }, { reps: 8, weight: 57.5 }, { reps: 8, weight: 57.5 }] },
-        { id: "souleve-terre-roumain", sets: [{ reps: 10, weight: 65 }, { reps: 10, weight: 65 }, { reps: 10, weight: 65 }] },
-      ],
-    },
-    {
-      days: 19,
-      plan: "Haut du corps",
-      exercises: [
-        { id: "tirage-horizontal", sets: [{ reps: 10, weight: 42.5 }, { reps: 10, weight: 42.5 }, { reps: 10, weight: 42.5 }] },
-        { id: "pompes", sets: [{ reps: 12 }, { reps: 12 }, { reps: 10 }] },
-      ],
-    },
-    {
-      days: 22,
-      plan: "Force jambes S1",
-      exercises: [{ id: "squat", sets: [{ reps: 8, weight: 55 }, { reps: 8, weight: 55 }, { reps: 8, weight: 55 }] }],
-    },
-  ];
-
-  testSessions.forEach((s) => {
-    const plan = byName[s.plan];
-    Storage.addSession({
-      date: isoDaysAgo(s.days),
-      planId: plan ? plan.id : null,
-      planName: plan ? plan.name : null,
-      exercises: s.exercises.map((e) => ({ exerciseId: e.id, sets: e.sets })),
-    });
-  });
-
-  showToast("Données de test chargées");
-  renderSessionView();
 }
 
 // ---------------------------------------------------------------------
