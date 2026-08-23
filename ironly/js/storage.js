@@ -1,105 +1,154 @@
 /*
  * Storage.js — seul endroit qui lit/écrit les données d'Ironly.
- * V1 : tout est stocké en local (localStorage), un appareil = ses données.
- *
- * Évolution Supabase : chaque fonction ci-dessous a une signature stable
- * (mêmes noms, mêmes formes d'objets en entrée/sortie) pensée pour qu'on
- * puisse un jour remplacer le corps de ces fonctions par des appels
- * réseau vers Supabase (comme dans l'app Aurora du même dossier), sans
- * avoir à toucher au reste de l'application. Le jour venu : garder
- * getPlans()/getSessions() synchrones via un cache local rafraîchi après
- * chaque écriture, exactement comme Aurora le fait déjà.
+ * Parle à la base Supabase en ligne (synchronisée entre appareils).
+ * getPlans()/getSessions()/getCustomExercises() restent synchrones :
+ * elles lisent un cache local mis à jour après chaque appel réseau,
+ * pour ne pas avoir à réécrire tout l'affichage en asynchrone —
+ * exactement comme le fait déjà l'app Aurora du même dépôt.
  */
 
 const Storage = (() => {
-  const PLANS_KEY = "ironly:plans";
-  const SESSIONS_KEY = "ironly:sessions";
-  const EXERCISES_KEY = "ironly:custom-exercises";
+  let cachedPlans = [];
+  let cachedSessions = [];
+  let cachedCustomExercises = [];
 
-  function readJSON(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : fallback;
-    } catch (err) {
-      console.error(`Erreur de lecture (${key}) :`, err);
-      return fallback;
-    }
+  function rowToPlan(row) {
+    return { id: row.id, name: row.name, exercises: row.exercises || [] };
   }
 
-  function writeJSON(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+  function planToRow(plan, userId) {
+    return { user_id: userId, name: plan.name, exercises: plan.exercises };
   }
 
-  function uid() {
-    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  function rowToSession(row) {
+    return {
+      id: row.id,
+      date: row.date,
+      planId: row.plan_id,
+      planName: row.plan_name,
+      exercises: row.exercises || [],
+    };
+  }
+
+  function sessionToRow(session, userId) {
+    return {
+      user_id: userId,
+      date: session.date,
+      plan_id: session.planId || null,
+      plan_name: session.planName || null,
+      exercises: session.exercises,
+    };
+  }
+
+  function rowToExercise(row) {
+    return { id: row.id, name: row.name, group: row.muscle_group, metric: row.metric };
+  }
+
+  async function currentUserId() {
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+    return user ? user.id : null;
   }
 
   // ---- Exercices personnalisés (viennent s'ajouter au catalogue prédéfini) ----
 
   function getCustomExercises() {
-    return readJSON(EXERCISES_KEY, []);
+    return cachedCustomExercises;
   }
 
-  function addCustomExercise(exercise) {
-    const exercises = getCustomExercises();
-    const record = { id: uid(), ...exercise };
-    exercises.push(record);
-    writeJSON(EXERCISES_KEY, exercises);
-    return record;
+  async function addCustomExercise(exercise) {
+    const userId = await currentUserId();
+    const { data, error } = await supabaseClient
+      .from("ironly_custom_exercises")
+      .insert({ user_id: userId, name: exercise.name, muscle_group: exercise.group, metric: exercise.metric })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Erreur d'ajout de l'exercice :", error.message);
+      return null;
+    }
+
+    await refresh();
+    return rowToExercise(data);
   }
 
   // ---- Plans d'entraînement (séances-types réutilisables) ----
 
   function getPlans() {
-    return readJSON(PLANS_KEY, []);
+    return cachedPlans;
   }
 
-  function addPlan(plan) {
-    const plans = getPlans();
-    const record = { id: uid(), createdAt: new Date().toISOString(), ...plan };
-    plans.push(record);
-    writeJSON(PLANS_KEY, plans);
-    return record;
+  async function addPlan(plan) {
+    const userId = await currentUserId();
+    const { data, error } = await supabaseClient
+      .from("ironly_plans")
+      .insert(planToRow(plan, userId))
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Erreur d'enregistrement du plan :", error.message);
+      return null;
+    }
+
+    await refresh();
+    return rowToPlan(data);
   }
 
-  function updatePlan(id, updates) {
-    const plans = getPlans();
-    const idx = plans.findIndex((p) => p.id === id);
-    if (idx === -1) return;
-    plans[idx] = { ...plans[idx], ...updates };
-    writeJSON(PLANS_KEY, plans);
-    return plans[idx];
+  async function updatePlan(id, updates) {
+    const { error } = await supabaseClient
+      .from("ironly_plans")
+      .update({ name: updates.name, exercises: updates.exercises })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Erreur de modification du plan :", error.message);
+      return;
+    }
+
+    await refresh();
   }
 
-  function deletePlan(id) {
-    writeJSON(PLANS_KEY, getPlans().filter((p) => p.id !== id));
+  async function deletePlan(id) {
+    const { error } = await supabaseClient.from("ironly_plans").delete().eq("id", id);
+
+    if (error) {
+      console.error("Erreur de suppression du plan :", error.message);
+      return;
+    }
+
+    await refresh();
   }
 
   // ---- Séances réalisées ----
 
   function getSessions() {
-    return readJSON(SESSIONS_KEY, []);
+    return cachedSessions;
   }
 
-  function addSession(session) {
-    const sessions = getSessions();
-    const record = { id: uid(), ...session };
-    sessions.push(record);
-    writeJSON(SESSIONS_KEY, sessions);
-    return record;
+  async function addSession(session) {
+    const userId = await currentUserId();
+    const { error } = await supabaseClient.from("ironly_sessions").insert(sessionToRow(session, userId));
+
+    if (error) {
+      console.error("Erreur d'enregistrement de la séance :", error.message);
+      return;
+    }
+
+    await refresh();
   }
 
-  function updateSession(id, updates) {
-    const sessions = getSessions();
-    const idx = sessions.findIndex((s) => s.id === id);
-    if (idx === -1) return;
-    sessions[idx] = { ...sessions[idx], ...updates };
-    writeJSON(SESSIONS_KEY, sessions);
-    return sessions[idx];
-  }
+  async function deleteSession(id) {
+    const { error } = await supabaseClient.from("ironly_sessions").delete().eq("id", id);
 
-  function deleteSession(id) {
-    writeJSON(SESSIONS_KEY, getSessions().filter((s) => s.id !== id));
+    if (error) {
+      console.error("Erreur de suppression de la séance :", error.message);
+      return;
+    }
+
+    await refresh();
   }
 
   // ---- Historique par exercice : pour adapter ses charges séance après séance ----
@@ -114,6 +163,24 @@ const Storage = (() => {
       .sort((a, b) => (a.date < b.date ? 1 : -1));
   }
 
+  // ---- Rechargement du cache depuis Supabase (après connexion, après écriture) ----
+
+  async function refresh() {
+    const [plansRes, sessionsRes, exercisesRes] = await Promise.all([
+      supabaseClient.from("ironly_plans").select("*").order("created_at", { ascending: true }),
+      supabaseClient.from("ironly_sessions").select("*").order("date", { ascending: false }),
+      supabaseClient.from("ironly_custom_exercises").select("*").order("created_at", { ascending: true }),
+    ]);
+
+    if (plansRes.error) console.error("Erreur de chargement des plans :", plansRes.error.message);
+    if (sessionsRes.error) console.error("Erreur de chargement des séances :", sessionsRes.error.message);
+    if (exercisesRes.error) console.error("Erreur de chargement des exercices :", exercisesRes.error.message);
+
+    cachedPlans = (plansRes.data || []).map(rowToPlan);
+    cachedSessions = (sessionsRes.data || []).map(rowToSession);
+    cachedCustomExercises = (exercisesRes.data || []).map(rowToExercise);
+  }
+
   return {
     getCustomExercises,
     addCustomExercise,
@@ -123,8 +190,8 @@ const Storage = (() => {
     deletePlan,
     getSessions,
     addSession,
-    updateSession,
     deleteSession,
     getHistoryForExercise,
+    refresh,
   };
 })();

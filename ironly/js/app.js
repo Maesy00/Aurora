@@ -140,7 +140,7 @@ function openExercisePicker(onSelect) {
   openModal(exercisePickerHTML());
   const root = document.getElementById("modal-root");
 
-  root.onclick = (e) => {
+  root.onclick = async (e) => {
     if (e.target.classList.contains("modal-overlay") || e.target.closest('[data-action="close-modal"]')) {
       closeModal();
       return;
@@ -161,9 +161,9 @@ function openExercisePicker(onSelect) {
       }
       const group = root.querySelector("#custom-ex-group").value;
       const metric = root.querySelector("#custom-ex-metric").value;
-      const exercise = Exercises.createCustom(name, group, metric);
       const cb = pickerOnSelect;
       closeModal();
+      const exercise = await Exercises.createCustom(name, group, metric);
       cb(exercise);
     }
   };
@@ -335,7 +335,7 @@ function addExerciseToSession(exercise) {
   renderSessionExercises();
 }
 
-function finishSession() {
+async function finishSession() {
   if (activeSession.exercises.length === 0) {
     showToast("Ajoute au moins un exercice");
     return;
@@ -359,7 +359,7 @@ function finishSession() {
     showToast("Renseigne au moins une série");
     return;
   }
-  Storage.addSession(cleaned);
+  await Storage.addSession(cleaned);
   activeSession = null;
   saveDraft();
   showToast("Séance enregistrée");
@@ -516,7 +516,7 @@ function editPlan(plan) {
   renderPlanEditor();
 }
 
-function savePlan() {
+async function savePlan() {
   const name = document.getElementById("plan-name").value.trim();
   if (!name) {
     showToast("Donne un nom au plan");
@@ -530,8 +530,8 @@ function savePlan() {
     name,
     exercises: planDraft.exercises,
   };
-  if (planDraft.id) Storage.updatePlan(planDraft.id, payload);
-  else Storage.addPlan(payload);
+  if (planDraft.id) await Storage.updatePlan(planDraft.id, payload);
+  else await Storage.addPlan(payload);
   showToast("Plan enregistré");
   planDraft = null;
   renderPlansListView();
@@ -575,7 +575,7 @@ function wirePlansView() {
     const del = e.target.closest('[data-action="delete-plan"]');
     if (del) {
       if (await confirmDialog("Supprimer ce plan ?")) {
-        Storage.deletePlan(del.dataset.planId);
+        await Storage.deletePlan(del.dataset.planId);
         renderPlansListView();
       }
     }
@@ -642,7 +642,7 @@ function wireHistoryView() {
     const del = e.target.closest('[data-action="delete-session"]');
     if (!del) return;
     if (await confirmDialog("Supprimer cette séance de l'historique ?")) {
-      Storage.deleteSession(del.dataset.sessionId);
+      await Storage.deleteSession(del.dataset.sessionId);
       renderHistoryView();
     }
   });
@@ -789,8 +789,6 @@ function init() {
   wirePlansView();
   wireHistoryView();
   wireStatsView();
-
-  switchView("session");
 }
 
 document.addEventListener("DOMContentLoaded", init);
