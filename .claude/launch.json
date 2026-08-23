@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "5500"],
       "port": 5500
+    },
+    {
+      "name": "ironly",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "5501"],
+      "port": 5501
     }
   ]
 }

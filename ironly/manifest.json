@@ -1,0 +1,15 @@
+{
+  "name": "Ironly",
+  "short_name": "Ironly",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#EAEDF8",
+  "theme_color": "#0033FF",
+  "icons": [
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
