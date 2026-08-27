@@ -50,7 +50,7 @@ const Stats = (() => {
     return `${d.getDate()}/${d.getMonth() + 1}`;
   }
 
-  function lineChartSVG(points, valueKey, unit) {
+  function lineChartSVG(points, valueKey, formatValue) {
     if (points.length === 0) {
       return `<p class="empty-hint">Pas encore de données pour cet exercice.</p>`;
     }
@@ -78,7 +78,7 @@ const Stats = (() => {
         <path d="${path}" class="chart-line" fill="none"/>
         ${dots}
       </svg>
-      <div class="chart-caption">Dernier : <strong>${last[valueKey]}${unit}</strong> le ${formatShortDate(last.date)}</div>
+      <div class="chart-caption">Dernier : <strong>${formatValue(last[valueKey])}</strong> le ${formatShortDate(last.date)}</div>
     `;
   }
 

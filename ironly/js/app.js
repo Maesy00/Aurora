@@ -11,6 +11,10 @@ let activeSession = null; // { date, planId, planName, exercises: [{exerciseId, 
 let planDraft = null; // { id, name, exercises: [{exerciseId, targetSets, targetReps}] }
 let pickerOnSelect = null;
 
+const REST_TIMER_DEFAULT = 90;
+let restTimer = null; // { remaining, duration, intervalId }
+let runningChronos = {}; // `${exerciseId}:${setIndex}` -> { startedAt, intervalId }
+
 // ---------------------------------------------------------------------
 // Utilitaires
 // ---------------------------------------------------------------------
@@ -26,13 +30,20 @@ function formatDateLong(iso) {
   return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
 }
 
+function secondsToClock(totalSeconds) {
+  const s = Math.max(0, Math.round(Number(totalSeconds) || 0));
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
 function formatSetsSummary(sets, metric) {
   if (!sets || sets.length === 0) return "—";
   if (metric === "weight_reps") {
     return sets.map((s) => `${s.reps || 0}×${s.weight || 0}kg`).join(" · ");
   }
   if (metric === "time") {
-    return sets.map((s) => `${s.duration || 0}s`).join(" · ");
+    return sets.map((s) => secondsToClock(s.duration || 0)).join(" · ");
   }
   return sets.map((s) => s.reps || 0).join("-") + " reps";
 }
@@ -43,6 +54,131 @@ function showToast(msg) {
   el.classList.remove("hidden");
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => el.classList.add("hidden"), 2200);
+}
+
+// ---------------------------------------------------------------------
+// Chrono de repos entre les séries
+// ---------------------------------------------------------------------
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.55);
+    osc.onended = () => ctx.close();
+  } catch (err) {
+    // Contexte audio indisponible — la vibration suffit.
+  }
+}
+
+function renderRestTimer() {
+  if (!restTimer) return;
+  document.getElementById("rest-timer-time").textContent = secondsToClock(restTimer.remaining);
+}
+
+function stopRestTimerInterval() {
+  if (restTimer && restTimer.intervalId) clearInterval(restTimer.intervalId);
+}
+
+function stopRestTimer() {
+  stopRestTimerInterval();
+  restTimer = null;
+  const el = document.getElementById("rest-timer");
+  el.classList.add("hidden");
+  el.classList.remove("rest-timer-done");
+}
+
+function onRestTimerDone() {
+  stopRestTimerInterval();
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  playBeep();
+  document.getElementById("rest-timer-time").textContent = "0:00";
+  document.getElementById("rest-timer").classList.add("rest-timer-done");
+  clearTimeout(onRestTimerDone._t);
+  onRestTimerDone._t = setTimeout(stopRestTimer, 3000);
+}
+
+function startRestTimer(seconds) {
+  stopRestTimerInterval();
+  clearTimeout(onRestTimerDone._t);
+  restTimer = { remaining: seconds, duration: seconds };
+  document.getElementById("rest-timer").classList.remove("rest-timer-done");
+  document.getElementById("rest-timer").classList.remove("hidden");
+  renderRestTimer();
+  restTimer.intervalId = setInterval(() => {
+    restTimer.remaining -= 1;
+    renderRestTimer();
+    if (restTimer.remaining <= 0) onRestTimerDone();
+  }, 1000);
+}
+
+function adjustRestTimer(delta) {
+  if (!restTimer) return;
+  restTimer.remaining = Math.max(0, restTimer.remaining + delta);
+  renderRestTimer();
+}
+
+function wireRestTimer() {
+  document.getElementById("rest-timer-minus").addEventListener("click", () => adjustRestTimer(-15));
+  document.getElementById("rest-timer-plus").addEventListener("click", () => adjustRestTimer(15));
+  document.getElementById("rest-timer-stop").addEventListener("click", () => stopRestTimer());
+}
+
+// ---------------------------------------------------------------------
+// Chrono d'exercice (planche, gainage...) — remplit la durée automatiquement
+// ---------------------------------------------------------------------
+
+function clearChronosForExercise(exerciseId) {
+  Object.keys(runningChronos).forEach((key) => {
+    if (key.startsWith(`${exerciseId}:`)) {
+      clearInterval(runningChronos[key].intervalId);
+      delete runningChronos[key];
+    }
+  });
+}
+
+function resetTimers() {
+  stopRestTimer();
+  Object.values(runningChronos).forEach((r) => clearInterval(r.intervalId));
+  runningChronos = {};
+}
+
+function updateChronoDisplay(exerciseId, setIndex) {
+  const running = runningChronos[`${exerciseId}:${setIndex}`];
+  if (!running) return;
+  const elapsed = Math.round((Date.now() - running.startedAt) / 1000);
+  const min = document.querySelector(`[data-field="duration-min"][data-exercise-id="${exerciseId}"][data-set-index="${setIndex}"]`);
+  const sec = document.querySelector(`[data-field="duration-sec"][data-exercise-id="${exerciseId}"][data-set-index="${setIndex}"]`);
+  if (min) min.value = Math.floor(elapsed / 60);
+  if (sec) sec.value = String(elapsed % 60).padStart(2, "0");
+}
+
+function toggleChrono(exerciseId, setIndex) {
+  const key = `${exerciseId}:${setIndex}`;
+  if (runningChronos[key]) {
+    const { startedAt, intervalId } = runningChronos[key];
+    clearInterval(intervalId);
+    delete runningChronos[key];
+    const elapsed = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+    const entry = activeSession.exercises.find((x) => x.exerciseId === exerciseId);
+    entry.sets[setIndex].duration = elapsed;
+    entry.sets[setIndex].confirmed = true;
+    saveDraft();
+    renderSessionExercises();
+    startRestTimer(REST_TIMER_DEFAULT);
+    return;
+  }
+  runningChronos[key] = { startedAt: Date.now(), intervalId: setInterval(() => updateChronoDisplay(exerciseId, setIndex), 1000) };
+  renderSessionExercises();
 }
 
 function openModal(contentHTML) {
@@ -215,15 +351,38 @@ function sessionExerciseCardHTML(entry) {
   const lastHint = history[0]
     ? `Dernière fois (${formatDateLong(history[0].date)}) : ${formatSetsSummary(history[0].sets, exercise.metric)}`
     : "Pas d'historique pour cet exercice.";
+  const targetHint = entry.targetReps
+    ? `<p class="target-hint">Objectif du plan : ${entry.targetSets || entry.sets.length}×${entry.targetReps}</p>`
+    : "";
 
   const rows = entry.sets
-    .map(
-      (set, i) => `
-      <div class="set-row" data-exercise-id="${exercise.id}" data-set-index="${i}">
-        <span class="set-index">${i + 1}</span>
-        ${fields
-          .map(
-            (f) => `
+    .map((set, i) => {
+      const isPending = set.confirmed === false;
+      const chronoKey = `${exercise.id}:${i}`;
+      const chronoRunning = !!runningChronos[chronoKey];
+      const fieldsHtml =
+        exercise.metric === "time"
+          ? (() => {
+              const hasValue = set.duration !== undefined && set.duration !== "";
+              const total = hasValue ? Math.max(0, Math.round(Number(set.duration) || 0)) : null;
+              const mins = total !== null ? Math.floor(total / 60) : "";
+              const secs = total !== null ? String(total % 60).padStart(2, "0") : "";
+              return `
+          <span class="set-field set-field-duration">
+            <input class="set-input set-input-duration" type="number" inputmode="numeric" min="0"
+              placeholder="0" data-field="duration-min"
+              data-exercise-id="${exercise.id}" data-set-index="${i}" value="${mins}" ${chronoRunning ? "readonly" : ""}>
+            <span class="set-duration-sep">:</span>
+            <input class="set-input set-input-duration" type="number" inputmode="numeric" min="0" max="59"
+              placeholder="00" data-field="duration-sec"
+              data-exercise-id="${exercise.id}" data-set-index="${i}" value="${secs}" ${chronoRunning ? "readonly" : ""}>
+          </span>
+          <button type="button" class="set-chrono${chronoRunning ? " set-chrono-running" : ""}" data-action="toggle-chrono" data-exercise-id="${exercise.id}" data-set-index="${i}" aria-label="${chronoRunning ? "Arrêter le chrono" : "Démarrer le chrono"}">${chronoRunning ? "■" : "▶"}</button>
+        `;
+            })()
+          : fields
+              .map(
+                (f) => `
           <span class="set-field">
             <input class="set-input" type="${f.type}" inputmode="${f.inputmode}" min="0" step="${f.key === "weight" ? "0.5" : "1"}"
               placeholder="${f.label}" data-field="${f.key}"
@@ -232,11 +391,19 @@ function sessionExerciseCardHTML(entry) {
             <span class="set-unit">${f.unit}</span>
           </span>
         `
-          )
-          .join("")}
+              )
+              .join("");
+      const confirmBtn = isPending
+        ? `<button type="button" class="set-confirm" data-action="confirm-set" data-exercise-id="${exercise.id}" data-set-index="${i}" aria-label="Valider la série">✓</button>`
+        : "";
+      return `
+      <div class="set-row${isPending ? " set-row-pending" : ""}" data-exercise-id="${exercise.id}" data-set-index="${i}">
+        <span class="set-index">${i + 1}</span>
+        ${fieldsHtml}
+        ${confirmBtn}
         <button type="button" class="set-remove" data-action="remove-set" data-exercise-id="${exercise.id}" data-set-index="${i}" aria-label="Retirer la série">✕</button>
-      </div>`
-    )
+      </div>`;
+    })
     .join("");
 
   return `
@@ -248,6 +415,7 @@ function sessionExerciseCardHTML(entry) {
         </div>
         <button type="button" class="icon-btn" data-action="remove-exercise" data-exercise-id="${exercise.id}" aria-label="Retirer l'exercice">✕</button>
       </div>
+      ${targetHint}
       <p class="history-hint">${lastHint}</p>
       <div class="set-rows">${rows}</div>
       <button type="button" class="btn btn-tertiary" data-action="add-set" data-exercise-id="${exercise.id}">+ Série</button>
@@ -315,8 +483,12 @@ function startSessionFromPlan(plan) {
       const history = Storage.getHistoryForExercise(pe.exerciseId);
       const lastSets = history[0] ? history[0].sets : [];
       const count = pe.targetSets || 1;
-      const sets = Array.from({ length: count }, (_, i) => ({ ...(lastSets[i] || {}) }));
-      return { exerciseId: pe.exerciseId, sets };
+      const lastSetOfLastSession = lastSets.length > 0 ? lastSets[lastSets.length - 1] : null;
+      const sets = Array.from({ length: count }, (_, i) => {
+        const source = i === 0 ? lastSetOfLastSession : lastSets[i];
+        return source ? { ...source, confirmed: false } : {};
+      });
+      return { exerciseId: pe.exerciseId, sets, targetSets: pe.targetSets, targetReps: pe.targetReps };
     }),
   };
   saveDraft();
@@ -347,6 +519,7 @@ async function finishSession() {
     exercises: activeSession.exercises.map((e) => ({
       exerciseId: e.exerciseId,
       sets: e.sets
+        .filter((s) => s.confirmed !== false)
         .filter((s) => (s.reps !== "" && s.reps != null) || (s.duration !== "" && s.duration != null))
         .map((s) => ({
           reps: s.reps !== undefined && s.reps !== "" ? Number(s.reps) : undefined,
@@ -361,6 +534,7 @@ async function finishSession() {
   }
   await Storage.addSession(cleaned);
   activeSession = null;
+  resetTimers();
   saveDraft();
   showToast("Séance enregistrée");
   switchView("history");
@@ -369,6 +543,7 @@ async function finishSession() {
 async function cancelSession() {
   if (!(await confirmDialog("Annuler cette séance ? Les données saisies seront perdues."))) return;
   activeSession = null;
+  resetTimers();
   saveDraft();
   renderSessionView();
 }
@@ -396,9 +571,25 @@ function wireSessionView() {
 
   const list = document.getElementById("session-exercises");
   list.addEventListener("click", (e) => {
+    const confirmSet = e.target.closest('[data-action="confirm-set"]');
+    if (confirmSet) {
+      const entry = activeSession.exercises.find((x) => x.exerciseId === confirmSet.dataset.exerciseId);
+      entry.sets[Number(confirmSet.dataset.setIndex)].confirmed = true;
+      saveDraft();
+      renderSessionExercises();
+      startRestTimer(REST_TIMER_DEFAULT);
+      return;
+    }
+    const chronoBtn = e.target.closest('[data-action="toggle-chrono"]');
+    if (chronoBtn) {
+      toggleChrono(chronoBtn.dataset.exerciseId, Number(chronoBtn.dataset.setIndex));
+      return;
+    }
     const removeSet = e.target.closest('[data-action="remove-set"]');
     if (removeSet) {
-      const entry = activeSession.exercises.find((x) => x.exerciseId === removeSet.dataset.exerciseId);
+      const exerciseId = removeSet.dataset.exerciseId;
+      clearChronosForExercise(exerciseId);
+      const entry = activeSession.exercises.find((x) => x.exerciseId === exerciseId);
       entry.sets.splice(Number(removeSet.dataset.setIndex), 1);
       saveDraft();
       renderSessionExercises();
@@ -408,13 +599,14 @@ function wireSessionView() {
     if (addSet) {
       const entry = activeSession.exercises.find((x) => x.exerciseId === addSet.dataset.exerciseId);
       const last = entry.sets[entry.sets.length - 1] || {};
-      entry.sets.push({ ...last });
+      entry.sets.push({ ...last, confirmed: false });
       saveDraft();
       renderSessionExercises();
       return;
     }
     const removeExercise = e.target.closest('[data-action="remove-exercise"]');
     if (removeExercise) {
+      clearChronosForExercise(removeExercise.dataset.exerciseId);
       activeSession.exercises = activeSession.exercises.filter((x) => x.exerciseId !== removeExercise.dataset.exerciseId);
       saveDraft();
       renderSessionExercises();
@@ -424,7 +616,24 @@ function wireSessionView() {
     const input = e.target.closest(".set-input");
     if (!input) return;
     const entry = activeSession.exercises.find((x) => x.exerciseId === input.dataset.exerciseId);
-    entry.sets[Number(input.dataset.setIndex)][input.dataset.field] = input.value;
+    const setIndex = Number(input.dataset.setIndex);
+    if (input.dataset.field === "duration-min" || input.dataset.field === "duration-sec") {
+      const row = input.closest(".set-row");
+      const min = Number(row.querySelector('[data-field="duration-min"]').value) || 0;
+      const sec = Number(row.querySelector('[data-field="duration-sec"]').value) || 0;
+      entry.sets[setIndex].duration = min * 60 + sec;
+    } else {
+      entry.sets[setIndex][input.dataset.field] = input.value;
+    }
+    if (entry.sets[setIndex].confirmed === false) {
+      entry.sets[setIndex].confirmed = true;
+      const row = input.closest(".set-row");
+      if (row) {
+        row.classList.remove("set-row-pending");
+        const confirmBtn = row.querySelector('[data-action="confirm-set"]');
+        if (confirmBtn) confirmBtn.remove();
+      }
+    }
     saveDraft();
   });
 }
@@ -746,8 +955,9 @@ function renderExerciseStats(exerciseId) {
   }
   empty.classList.add("hidden");
   charts.classList.remove("hidden");
-  const unit = Stats.metricUnit(exercise.metric);
-  document.getElementById("stats-progress-chart").innerHTML = Stats.lineChartSVG(points, statsMetricKey, unit);
+  const formatValue =
+    exercise.metric === "time" ? (v) => secondsToClock(v) : (v) => `${v}${Stats.metricUnit(exercise.metric)}`;
+  document.getElementById("stats-progress-chart").innerHTML = Stats.lineChartSVG(points, statsMetricKey, formatValue);
 }
 
 function wireStatsView() {
@@ -789,6 +999,7 @@ function init() {
   wirePlansView();
   wireHistoryView();
   wireStatsView();
+  wireRestTimer();
 }
 
 document.addEventListener("DOMContentLoaded", init);

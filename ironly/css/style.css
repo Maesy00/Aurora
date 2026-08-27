@@ -472,31 +472,38 @@ textarea {
   border-radius: var(--radius-pill);
 }
 
+.target-hint {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 8px 0 0;
+}
+
 .history-hint {
   font-size: 11.5px;
   color: var(--muted);
-  margin: 8px 0 10px;
+  margin: 6px 0 10px;
 }
 
 .set-rows {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   margin: 4px 0 10px;
 }
 
 .set-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--bg);
   border-radius: var(--radius-sm);
-  padding: 6px 10px;
+  padding: 5px 8px;
 }
 
 .set-index {
-  width: 19px;
-  height: 19px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
@@ -511,8 +518,8 @@ textarea {
 .set-field {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-  flex: 1;
+  gap: 3px;
+  flex: 0 0 auto;
 }
 
 .set-input {
@@ -523,7 +530,7 @@ textarea {
   background: transparent;
   border: none;
   padding: 3px 0;
-  width: 2.8em;
+  width: 3.4em;
   min-width: 0;
 }
 
@@ -531,10 +538,46 @@ textarea {
   outline: none;
 }
 
+.set-input::placeholder {
+  color: var(--muted-light);
+  font-weight: 500;
+  opacity: 1;
+}
+
+.set-input[type="number"]::-webkit-inner-spin-button,
+.set-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.set-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 .set-unit {
   font-size: 9.5px;
   font-weight: 500;
   color: var(--muted);
+}
+
+.set-field-duration {
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.set-input-duration {
+  width: 1.6em;
+  text-align: center;
+}
+
+.set-input-duration:first-child {
+  text-align: right;
+}
+
+.set-duration-sep {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .set-remove {
@@ -546,6 +589,132 @@ textarea {
   cursor: pointer;
   flex-shrink: 0;
   padding: 3px;
+}
+
+.set-row-pending {
+  background: transparent;
+  border: 1px dashed var(--border, #d7dae8);
+}
+
+.set-row-pending .set-input {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.set-confirm {
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.set-confirm ~ .set-remove {
+  margin-left: 0;
+}
+
+.set-chrono {
+  margin-left: auto;
+  background: var(--card);
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.set-chrono-running {
+  background: var(--accent);
+  color: #fff;
+}
+
+.set-chrono ~ .set-confirm,
+.set-chrono ~ .set-remove {
+  margin-left: 0;
+}
+
+/* ---- Chrono de repos entre les séries ---- */
+
+.rest-timer {
+  position: fixed;
+  left: 50%;
+  bottom: 100px;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  border-radius: var(--radius-pill);
+  padding: 10px 14px;
+  z-index: 55;
+  box-shadow: 0 14px 26px -12px rgba(0, 3, 61, 0.5);
+  width: calc(100% - 40px);
+  max-width: 360px;
+  transition: background 0.2s ease;
+}
+
+.rest-timer-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rest-timer-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+.rest-timer-time {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  flex: 1;
+}
+
+.rest-timer-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.rest-timer-btn {
+  background: rgba(255, 255, 255, 0.14);
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.rest-timer-stop {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.rest-timer.rest-timer-done {
+  background: var(--accent);
 }
 
 /* ---- Plans ---- */
