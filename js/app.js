@@ -87,6 +87,7 @@ function selectDiscipline(discipline) {
     btn.classList.toggle("selected", btn.dataset.id === discipline.id);
   });
   distanceField.hidden = !discipline.hasDistance;
+  setDistanceMode(discipline.id === "swimming" ? "meters" : "km");
 }
 
 function parseDurationToMinutes(hhmm) {
@@ -97,13 +98,6 @@ function parseDurationToMinutes(hhmm) {
 function parseISODate(iso) {
   const [year, month, day] = iso.split("-").map(Number);
   return new Date(year, month - 1, day);
-}
-
-function decomposeDistance(km) {
-  const rounded = Math.round(km * 10) / 10;
-  const intPart = Math.floor(rounded);
-  const decimalDigit = Math.round((rounded - intPart) * 10);
-  return { intPart, decimalDigit };
 }
 
 function resetFormFields() {
@@ -131,8 +125,7 @@ function editSession(session) {
   setDuration(Math.floor(session.durationMinutes / 60), session.durationMinutes % 60, true);
 
   if (session.distanceKm) {
-    const { intPart, decimalDigit } = decomposeDistance(session.distanceKm);
-    setDistance(intPart, decimalDigit, true);
+    applyDistanceKmValue(session.distanceKm, true);
   } else {
     clearDistance();
   }
@@ -304,7 +297,7 @@ function renderHistory() {
     item.style.setProperty("--discipline-color", discipline.color);
 
     const metaParts = [formatDuration(session.durationMinutes)];
-    if (session.distanceKm) metaParts.push(formatDistance(session.distanceKm));
+    if (session.distanceKm) metaParts.push(formatDistanceForDiscipline(session.distanceKm, discipline.id));
 
     item.innerHTML = `
       <div class="session-icon-badge">
@@ -400,6 +393,14 @@ function formatDistance(km) {
   return `${formatted} km`;
 }
 
+function formatDistanceForDiscipline(km, disciplineId) {
+  if (disciplineId === "swimming") {
+    const meters = Math.round(km * 1000);
+    return `${meters.toLocaleString("fr-FR")} m`;
+  }
+  return formatDistance(km);
+}
+
 periodButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     currentPeriod = btn.dataset.period;
@@ -478,7 +479,7 @@ function renderDashboard() {
     const numbers = [
       `${disciplineSessions.length} séance${disciplineSessions.length > 1 ? "s" : ""}`,
       formatDuration(minutes),
-      discipline.hasDistance && distance > 0 ? formatDistance(distance) : null,
+      discipline.hasDistance && distance > 0 ? formatDistanceForDiscipline(distance, discipline.id) : null,
     ]
       .filter(Boolean)
       .join(" · ");

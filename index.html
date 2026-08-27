@@ -179,12 +179,17 @@
           <input type="hidden" id="session-distance">
 
           <div id="distance-popover" class="date-popover wheel-popover" hidden>
-            <div class="wheel-row">
+            <div class="wheel-row" id="distance-wheel-km">
               <div class="wheel-band" aria-hidden="true"></div>
               <div class="wheel-col"><div class="wheel-scroll" id="wheel-km"></div></div>
               <span class="wheel-sep">,</span>
               <div class="wheel-col"><div class="wheel-scroll" id="wheel-km-decimal"></div></div>
               <span class="wheel-sep">km</span>
+            </div>
+            <div class="wheel-row" id="distance-wheel-meters" hidden>
+              <div class="wheel-band" aria-hidden="true"></div>
+              <div class="wheel-col wheel-col-wide"><div class="wheel-scroll" id="wheel-meters"></div></div>
+              <span class="wheel-sep">m</span>
             </div>
             <div class="wheel-actions">
               <button type="button" id="distance-clear" class="date-today-btn muted">Effacer</button>

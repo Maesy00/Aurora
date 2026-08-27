@@ -484,6 +484,10 @@ h2 {
   height: 102px;
 }
 
+.wheel-col-wide {
+  width: 84px;
+}
+
 .wheel-scroll {
   position: absolute;
   inset: 0;
