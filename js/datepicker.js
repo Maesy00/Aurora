@@ -101,7 +101,6 @@ function closePopover() {
 trigger.addEventListener("click", (event) => {
   event.stopPropagation();
   const wasHidden = popover.hidden;
-  document.getElementById("duration-popover").hidden = true;
   wasHidden ? openPopover() : closePopover();
 });
 

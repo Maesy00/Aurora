@@ -150,24 +150,19 @@
           </div>
         </div>
 
-        <div class="field date-field">
-          <label for="duration-trigger">Durée</label>
-          <button type="button" id="duration-trigger" class="date-trigger">
-            <span id="duration-trigger-label">0h00</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-          </button>
-          <input type="hidden" id="session-duration" required>
-
-          <div id="duration-popover" class="date-popover wheel-popover" hidden>
-            <div class="wheel-row">
-              <div class="wheel-band" aria-hidden="true"></div>
-              <div class="wheel-col"><div class="wheel-scroll" id="wheel-hours"></div></div>
-              <span class="wheel-sep">h</span>
-              <div class="wheel-col"><div class="wheel-scroll" id="wheel-minutes"></div></div>
-              <span class="wheel-sep">min</span>
+        <div class="field">
+          <label for="duration-hours">Durée</label>
+          <div class="duration-inputs">
+            <div class="input-unit">
+              <input type="text" id="duration-hours" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="0">
+              <span>h</span>
             </div>
-            <button type="button" id="duration-done" class="date-today-btn">OK</button>
+            <div class="input-unit">
+              <input type="text" id="duration-minutes" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="00">
+              <span>min</span>
+            </div>
           </div>
+          <input type="hidden" id="session-duration">
         </div>
 
         <div class="field" id="distance-field" hidden>
@@ -298,7 +293,7 @@
   <script src="js/storage.js"></script>
   <script src="js/disciplines.js"></script>
   <script src="js/datepicker.js"></script>
-  <script src="js/wheelpicker.js"></script>
+  <script src="js/duration.js"></script>
   <script src="js/distance.js"></script>
   <script src="js/app.js"></script>
   <script src="js/import.js"></script>

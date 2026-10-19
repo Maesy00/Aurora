@@ -448,78 +448,12 @@ h2 {
   cursor: pointer;
 }
 
-/* --- Molettes (durée, distance) --- */
+/* --- Durée --- */
 
-.wheel-popover {
-  width: auto;
-  min-width: 210px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px;
-}
-
-.wheel-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.wheel-band {
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  top: 50%;
-  height: 34px;
-  transform: translateY(-50%);
-  border-top: 1.5px solid var(--color-border);
-  border-bottom: 1.5px solid var(--color-border);
-  pointer-events: none;
-}
-
-.wheel-col {
-  position: relative;
-  width: 46px;
-  height: 102px;
-}
-
-.wheel-scroll {
-  position: absolute;
-  inset: 0;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  padding: 34px 0;
-  scrollbar-width: none;
-}
-
-.wheel-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.wheel-item {
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  scroll-snap-align: center;
-}
-
-.wheel-item.active {
-  color: var(--color-text);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.05rem;
-}
-
-.wheel-sep {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
+.duration-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 /* --- Bilan --- */
