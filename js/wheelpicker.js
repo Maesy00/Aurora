@@ -1,6 +1,6 @@
 /*
- * wheelpicker.js — molettes de saisie (façon iOS) pour la durée et la
- * distance. Chaque molette est une liste défilante avec accroche
+ * wheelpicker.js — molettes de saisie (façon iOS) pour la durée.
+ * Chaque molette est une liste défilante avec accroche
  * (scroll-snap) ; la valeur retenue est celle centrée dans le cadre.
  */
 
@@ -55,7 +55,6 @@ function createWheel(container, values, formatFn) {
 
 function closeWheelPopovers() {
   document.getElementById("duration-popover").hidden = true;
-  document.getElementById("distance-popover").hidden = true;
 }
 
 /* --- Durée (heures / minutes) --- */
@@ -103,118 +102,10 @@ durationTrigger.addEventListener("click", (event) => {
 
 document.getElementById("duration-done").addEventListener("click", commitDuration);
 
-/* --- Distance (km + dixièmes, ou mètres pour la natation) --- */
-
-const distanceTrigger = document.getElementById("distance-trigger");
-const distanceLabel = document.getElementById("distance-trigger-label");
-const distanceHidden = document.getElementById("session-distance");
-const distancePopover = document.getElementById("distance-popover");
-const distanceWheelKmRow = document.getElementById("distance-wheel-km");
-const distanceWheelMetersRow = document.getElementById("distance-wheel-meters");
-
-const METERS_STEP = 25;
-const METERS_MAX = 6000;
-
-const kmWheel = createWheel(
-  document.getElementById("wheel-km"),
-  Array.from({ length: 201 }, (_, i) => i)
-);
-const kmDecimalWheel = createWheel(
-  document.getElementById("wheel-km-decimal"),
-  Array.from({ length: 10 }, (_, i) => i)
-);
-const metersWheel = createWheel(
-  document.getElementById("wheel-meters"),
-  Array.from({ length: METERS_MAX / METERS_STEP + 1 }, (_, i) => i * METERS_STEP),
-  (v) => v.toLocaleString("fr-FR")
-);
-
-let distanceMode = "km";
-
-function setDistanceMode(mode) {
-  distanceMode = mode;
-  distanceWheelKmRow.hidden = mode !== "km";
-  distanceWheelMetersRow.hidden = mode !== "meters";
-}
-
-function setDistance(km, decimal, instant) {
-  kmWheel.setIndex(km, instant);
-  kmDecimalWheel.setIndex(decimal, instant);
-  distanceHidden.value = `${km}.${decimal}`;
-  distanceLabel.textContent = `${km},${decimal} km`;
-  distanceLabel.classList.remove("placeholder-text");
-}
-
-function setDistanceMeters(meters, instant) {
-  const clamped = Math.max(0, Math.min(METERS_MAX, Math.round(meters / METERS_STEP) * METERS_STEP));
-  metersWheel.setIndex(clamped / METERS_STEP, instant);
-  distanceHidden.value = String(clamped / 1000);
-  distanceLabel.textContent = `${clamped.toLocaleString("fr-FR")} m`;
-  distanceLabel.classList.remove("placeholder-text");
-}
-
-function applyDistanceKmValue(kmValue, instant) {
-  if (distanceMode === "meters") {
-    setDistanceMeters(kmValue * 1000, instant);
-  } else {
-    const rounded = Math.round(kmValue * 10) / 10;
-    const km = Math.floor(rounded);
-    const decimal = Math.round((rounded - km) * 10);
-    setDistance(km, decimal, instant);
-  }
-}
-
-function clearDistance() {
-  distanceHidden.value = "";
-  distanceLabel.textContent = "Ajouter une distance";
-  distanceLabel.classList.add("placeholder-text");
-  kmWheel.setIndex(0, true);
-  kmDecimalWheel.setIndex(0, true);
-  metersWheel.setIndex(0, true);
-}
-
-function commitDistance() {
-  if (distanceMode === "meters") {
-    setDistanceMeters(metersWheel.getValue());
-  } else {
-    setDistance(kmWheel.getValue(), kmDecimalWheel.getValue());
-  }
-  distancePopover.hidden = true;
-}
-
-distanceTrigger.addEventListener("click", (event) => {
-  event.stopPropagation();
-  const wasHidden = distancePopover.hidden;
-  document.getElementById("date-popover").hidden = true;
-  closeWheelPopovers();
-  distancePopover.hidden = !wasHidden;
-
-  if (wasHidden) {
-    const currentKm = Number(distanceHidden.value) || 0;
-    if (distanceMode === "meters") {
-      metersWheel.setIndex(Math.round((currentKm * 1000) / METERS_STEP), true);
-    } else {
-      const [km, decimal] = (distanceHidden.value || "0.0").split(".").map(Number);
-      kmWheel.setIndex(km || 0, true);
-      kmDecimalWheel.setIndex(decimal || 0, true);
-    }
-  }
-});
-
-document.getElementById("distance-done").addEventListener("click", commitDistance);
-document.getElementById("distance-clear").addEventListener("click", () => {
-  clearDistance();
-  distancePopover.hidden = true;
-});
-
 document.addEventListener("click", (event) => {
   if (!durationPopover.hidden && !durationPopover.contains(event.target) && event.target !== durationTrigger) {
     commitDuration();
   }
-  if (!distancePopover.hidden && !distancePopover.contains(event.target) && event.target !== distanceTrigger) {
-    commitDistance();
-  }
 });
 
 setDuration(0, 0, true);
-clearDistance();

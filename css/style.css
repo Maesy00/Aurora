@@ -484,10 +484,6 @@ h2 {
   height: 102px;
 }
 
-.wheel-col-wide {
-  width: 84px;
-}
-
 .wheel-scroll {
   position: absolute;
   inset: 0;
@@ -524,26 +520,6 @@ h2 {
   font-weight: 700;
   font-size: 0.78rem;
   color: var(--color-text-muted);
-}
-
-.wheel-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.wheel-actions .date-today-btn {
-  flex: 1;
-  margin-top: 0;
-}
-
-.date-today-btn.muted {
-  color: var(--color-text-muted);
-}
-
-.placeholder-text {
-  color: var(--color-text-muted);
-  font-weight: 400;
 }
 
 /* --- Bilan --- */
